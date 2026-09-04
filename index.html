@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AvSec Flow Control</title>
+
+<style>
+
+body{
+font-family:Segoe UI,Arial,sans-serif;
+background:#f3f2f1;
+padding:20px;
+}
+
+.container{
+background:white;
+max-width:500px;
+margin:auto;
+padding:25px;
+border-radius:15px;
+box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+h1{
+text-align:center;
+color:#0078d4;
+}
+
+.setting{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 0;
+border-bottom:1px solid #ddd;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:20px;
+border:none;
+border-radius:10px;
+background:#0078d4;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.status{
+margin-top:15px;
+text-align:center;
+font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AvSec Flow Control</h1>
+
+<div class="setting">
+<label>Recall Auto Reply</label>
+<input type="checkbox" id="recall">
+</div>
+
+<div class="setting">
+<label>Extension Auto Reply</label>
+<input type="checkbox" id="extension">
+</div>
+
+<button onclick="saveChanges()">
+Save Changes
+</button>
+
+<div class="status" id="status"></div>
+
+</div>
+
+<script>
+
+const FLOW_URL =
+'https://default2a3a6f7440304a5e990fa70e200204.29.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/05cc917b66114b73bf72d37de990f083/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1a3lgG6VIxfWMrh-6-w7j06CiKZPwfeXeNtFYGDFb7E';
+
+const SECRET='AvSec2026!';
+
+async function updateControl(name,state){
+
+return fetch(FLOW_URL,{
+method:'POST',
+headers:{
+'Content-Type':'application/json'
+},
+body:JSON.stringify({
+control:name,
+enabled:state,
+secret:SECRET
+})
+});
+}
+
+async function saveChanges(){
+
+document.getElementById('status').innerHTML='Saving...';
+
+try{
+
+await updateControl(
+'RecallAutoReply',
+document.getElementById('recall').checked
+);
+
+await updateControl(
+'ExtensionAutoReply',
+document.getElementById('extension').checked
+);
+
+document.getElementById('status').innerHTML =
+'✅ Settings saved successfully';
+
+}
+catch(err){
+
+document.getElementById('status').innerHTML =
+'❌ Save failed';
+
+console.error(err);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
