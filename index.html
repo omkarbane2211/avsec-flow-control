@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>AvSec Flow Control</title>
 
@@ -31,8 +31,8 @@ h1{
 
 #connectionStatus{
     text-align:center;
-    font-weight:bold;
     margin-bottom:15px;
+    font-weight:bold;
 }
 
 .setting{
@@ -41,6 +41,13 @@ h1{
     align-items:center;
     padding:18px 0;
     border-bottom:1px solid #ddd;
+}
+
+.master{
+    background:#fff5f5;
+    padding-left:10px;
+    padding-right:10px;
+    border-radius:10px;
 }
 
 .switch{
@@ -93,215 +100,32 @@ button{
     border-radius:12px;
     font-size:16px;
     cursor:pointer;
+    color:white;
 }
 
 .save{
     background:#0078d4;
-    color:white;
 }
 
 .refresh{
     background:#666;
-    color:white;
 }
 
 .status{
-    margin-top:15px;
     text-align:center;
+    margin-top:15px;
     font-weight:bold;
 }
 
 .timestamp{
     text-align:center;
+    margin-top:6px;
     color:#666;
-    margin-top:5px;
     font-size:12px;
 }
 
-.master{
-    background:#fff5f5;
-}
-
 </style>
-</head>
 
-<body>
-
-<div class="container">
-
-<h1>AvSec Flow Control</h1>
-
-<div id="connectionStatus">
-🟡 Connecting...
-</div>
-
-<div class="setting">
-<span>Recall Auto Reply</span>
-<label class="switch">
-<input type="checkbox" id="recall">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="setting">
-<span>Extension Auto Reply</span>
-<label class="switch">
-<input type="checkbox" id="extension">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="setting master">
-<span>🚨 Master Automation</span>
-<label class="switch">
-<input type="checkbox" id="master">
-<span class="slider"></span>
-</label>
-</div>
-
-<button class="save" onclick="saveChanges()">
-Save Changes
-</button>
-
-<button class="refresh" onclick="loadStatus()">
-Refresh Status
-</button>
-
-<div class="status" id="status"></div>
-
-<div class="timestamp" id="lastUpdated"></div>
-
-</div>
-
-<script>
-
-const SECRET = "AvSec2026!";
-
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>AvSec Flow Control</title>
-
-<style>
-
-body{
-    font-family:Segoe UI,Arial,sans-serif;
-    background:#f3f2f1;
-    margin:0;
-    padding:20px;
-}
-
-.container{
-    max-width:500px;
-    margin:auto;
-    background:white;
-    border-radius:20px;
-    padding:25px;
-    box-shadow:0 4px 15px rgba(0,0,0,.15);
-}
-
-h1{
-    text-align:center;
-    color:#0078d4;
-}
-
-#connectionStatus{
-    text-align:center;
-    font-weight:bold;
-    margin-bottom:15px;
-}
-
-.setting{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:18px 0;
-    border-bottom:1px solid #ddd;
-}
-
-.switch{
-    position:relative;
-    display:inline-block;
-    width:52px;
-    height:30px;
-}
-
-.switch input{
-    opacity:0;
-    width:0;
-    height:0;
-}
-
-.slider{
-    position:absolute;
-    cursor:pointer;
-    inset:0;
-    background:#ccc;
-    transition:.3s;
-    border-radius:30px;
-}
-
-.slider:before{
-    position:absolute;
-    content:"";
-    height:22px;
-    width:22px;
-    left:4px;
-    bottom:4px;
-    background:white;
-    transition:.3s;
-    border-radius:50%;
-}
-
-input:checked + .slider{
-    background:#34c759;
-}
-
-input:checked + .slider:before{
-    transform:translateX(22px);
-}
-
-button{
-    width:100%;
-    margin-top:15px;
-    padding:15px;
-    border:none;
-    border-radius:12px;
-    font-size:16px;
-    cursor:pointer;
-}
-
-.save{
-    background:#0078d4;
-    color:white;
-}
-
-.refresh{
-    background:#666;
-    color:white;
-}
-
-.status{
-    margin-top:15px;
-    text-align:center;
-    font-weight:bold;
-}
-
-.timestamp{
-    text-align:center;
-    color:#666;
-    margin-top:5px;
-    font-size:12px;
-}
-
-.master{
-    background:#fff5f5;
-}
-
-</style>
 </head>
 
 <body>
@@ -409,13 +233,13 @@ document.getElementById("status").innerHTML =
 "✅ Status Loaded";
 
 document.getElementById("lastUpdated").innerHTML =
-"Last refreshed: " +
+"Last Refreshed: " +
 new Date().toLocaleString();
 
 }
-catch(err){
+catch(error){
 
-console.error(err);
+console.error(error);
 
 document.getElementById("connectionStatus").innerHTML =
 "🔴 Disconnected";
@@ -467,16 +291,16 @@ document.getElementById("master").checked
 );
 
 document.getElementById("status").innerHTML =
-"✅ Saved Successfully";
+"✅ Changes Saved Successfully";
 
 document.getElementById("lastUpdated").innerHTML =
-"Last updated: " +
+"Last Saved: " +
 new Date().toLocaleString();
 
 }
-catch(err){
+catch(error){
 
-console.error(err);
+console.error(error);
 
 document.getElementById("status").innerHTML =
 "❌ Save Failed";
