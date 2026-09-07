@@ -29,6 +29,12 @@ h1{
     color:#0078d4;
 }
 
+#connectionStatus{
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
 .setting{
     display:flex;
     justify-content:space-between;
@@ -81,18 +87,22 @@ input:checked + .slider:before{
 
 button{
     width:100%;
-    margin-top:20px;
+    margin-top:15px;
     padding:15px;
     border:none;
     border-radius:12px;
     font-size:16px;
-    background:#0078d4;
-    color:white;
     cursor:pointer;
 }
 
-button:hover{
-    background:#106ebe;
+.save{
+    background:#0078d4;
+    color:white;
+}
+
+.refresh{
+    background:#666;
+    color:white;
 }
 
 .status{
@@ -101,9 +111,15 @@ button:hover{
     font-weight:bold;
 }
 
-.refresh{
-    background:#666;
-    margin-top:10px;
+.timestamp{
+    text-align:center;
+    color:#666;
+    margin-top:5px;
+    font-size:12px;
+}
+
+.master{
+    background:#fff5f5;
 }
 
 </style>
@@ -114,6 +130,10 @@ button:hover{
 <div class="container">
 
 <h1>AvSec Flow Control</h1>
+
+<div id="connectionStatus">
+🟡 Connecting...
+</div>
 
 <div class="setting">
 <span>Recall Auto Reply</span>
@@ -131,7 +151,15 @@ button:hover{
 </label>
 </div>
 
-<button onclick="saveChanges()">
+<div class="setting master">
+<span>🚨 Master Automation</span>
+<label class="switch">
+<input type="checkbox" id="master">
+<span class="slider"></span>
+</label>
+</div>
+
+<button class="save" onclick="saveChanges()">
 Save Changes
 </button>
 
@@ -140,6 +168,187 @@ Refresh Status
 </button>
 
 <div class="status" id="status"></div>
+
+<div class="timestamp" id="lastUpdated"></div>
+
+</div>
+
+<script>
+
+const SECRET = "AvSec2026!";
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>AvSec Flow Control</title>
+
+<style>
+
+body{
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#f3f2f1;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:500px;
+    margin:auto;
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 4px 15px rgba(0,0,0,.15);
+}
+
+h1{
+    text-align:center;
+    color:#0078d4;
+}
+
+#connectionStatus{
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.setting{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:52px;
+    height:30px;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    background:#ccc;
+    transition:.3s;
+    border-radius:30px;
+}
+
+.slider:before{
+    position:absolute;
+    content:"";
+    height:22px;
+    width:22px;
+    left:4px;
+    bottom:4px;
+    background:white;
+    transition:.3s;
+    border-radius:50%;
+}
+
+input:checked + .slider{
+    background:#34c759;
+}
+
+input:checked + .slider:before{
+    transform:translateX(22px);
+}
+
+button{
+    width:100%;
+    margin-top:15px;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.save{
+    background:#0078d4;
+    color:white;
+}
+
+.refresh{
+    background:#666;
+    color:white;
+}
+
+.status{
+    margin-top:15px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.timestamp{
+    text-align:center;
+    color:#666;
+    margin-top:5px;
+    font-size:12px;
+}
+
+.master{
+    background:#fff5f5;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AvSec Flow Control</h1>
+
+<div id="connectionStatus">
+🟡 Connecting...
+</div>
+
+<div class="setting">
+<span>Recall Auto Reply</span>
+<label class="switch">
+<input type="checkbox" id="recall">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="setting">
+<span>Extension Auto Reply</span>
+<label class="switch">
+<input type="checkbox" id="extension">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="setting master">
+<span>🚨 Master Automation</span>
+<label class="switch">
+<input type="checkbox" id="master">
+<span class="slider"></span>
+</label>
+</div>
+
+<button class="save" onclick="saveChanges()">
+Save Changes
+</button>
+
+<button class="refresh" onclick="loadStatus()">
+Refresh Status
+</button>
+
+<div class="status" id="status"></div>
+
+<div class="timestamp" id="lastUpdated"></div>
 
 </div>
 
@@ -160,7 +369,9 @@ document.getElementById("status").innerHTML =
 
 try{
 
-const response = await fetch(STATUS_API,{
+const response = await fetch(
+STATUS_API,
+{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -172,30 +383,45 @@ secret:SECRET
 
 const data = await response.json();
 
-data.forEach(item=>{
+data.forEach(item => {
 
-if(item.Title==="RecallAutoReply"){
+if(item.Title === "RecallAutoReply"){
 document.getElementById("recall").checked =
 item.Enabled;
 }
 
-if(item.Title==="ExtensionAutoReply"){
+if(item.Title === "ExtensionAutoReply"){
 document.getElementById("extension").checked =
+item.Enabled;
+}
+
+if(item.Title === "MasterAutomation"){
+document.getElementById("master").checked =
 item.Enabled;
 }
 
 });
 
+document.getElementById("connectionStatus").innerHTML =
+"🟢 Connected";
+
 document.getElementById("status").innerHTML =
-"✅ Status loaded";
+"✅ Status Loaded";
+
+document.getElementById("lastUpdated").innerHTML =
+"Last refreshed: " +
+new Date().toLocaleString();
 
 }
 catch(err){
 
 console.error(err);
 
+document.getElementById("connectionStatus").innerHTML =
+"🔴 Disconnected";
+
 document.getElementById("status").innerHTML =
-"❌ Failed loading status";
+"❌ Failed Loading Status";
 
 }
 
@@ -221,7 +447,7 @@ secret:SECRET
 async function saveChanges(){
 
 document.getElementById("status").innerHTML =
-"Saving...";
+"Saving changes...";
 
 try{
 
@@ -235,8 +461,17 @@ await updateControl(
 document.getElementById("extension").checked
 );
 
+await updateControl(
+"MasterAutomation",
+document.getElementById("master").checked
+);
+
 document.getElementById("status").innerHTML =
 "✅ Saved Successfully";
+
+document.getElementById("lastUpdated").innerHTML =
+"Last updated: " +
+new Date().toLocaleString();
 
 }
 catch(err){
@@ -251,6 +486,8 @@ document.getElementById("status").innerHTML =
 }
 
 loadStatus();
+
+setInterval(loadStatus,30000);
 
 </script>
 
