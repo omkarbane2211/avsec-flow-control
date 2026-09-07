@@ -2,56 +2,108 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>AvSec Flow Control</title>
 
 <style>
 
 body{
-font-family:Segoe UI,Arial,sans-serif;
-background:#f3f2f1;
-padding:20px;
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#f3f2f1;
+    margin:0;
+    padding:20px;
 }
 
 .container{
-background:white;
-max-width:500px;
-margin:auto;
-padding:25px;
-border-radius:15px;
-box-shadow:0 4px 10px rgba(0,0,0,.15);
+    max-width:500px;
+    margin:auto;
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 4px 15px rgba(0,0,0,.15);
 }
 
 h1{
-text-align:center;
-color:#0078d4;
+    text-align:center;
+    color:#0078d4;
 }
 
 .setting{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 0;
-border-bottom:1px solid #ddd;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:52px;
+    height:30px;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    background:#ccc;
+    transition:.3s;
+    border-radius:30px;
+}
+
+.slider:before{
+    position:absolute;
+    content:"";
+    height:22px;
+    width:22px;
+    left:4px;
+    bottom:4px;
+    background:white;
+    transition:.3s;
+    border-radius:50%;
+}
+
+input:checked + .slider{
+    background:#34c759;
+}
+
+input:checked + .slider:before{
+    transform:translateX(22px);
 }
 
 button{
-width:100%;
-padding:15px;
-margin-top:20px;
-border:none;
-border-radius:10px;
-background:#0078d4;
-color:white;
-font-size:16px;
-cursor:pointer;
+    width:100%;
+    margin-top:20px;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    background:#0078d4;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#106ebe;
 }
 
 .status{
-margin-top:15px;
-text-align:center;
-font-weight:bold;
+    margin-top:15px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.refresh{
+    background:#666;
+    margin-top:10px;
 }
 
 </style>
@@ -64,17 +116,27 @@ font-weight:bold;
 <h1>AvSec Flow Control</h1>
 
 <div class="setting">
-<label>Recall Auto Reply</label>
+<span>Recall Auto Reply</span>
+<label class="switch">
 <input type="checkbox" id="recall">
+<span class="slider"></span>
+</label>
 </div>
 
 <div class="setting">
-<label>Extension Auto Reply</label>
+<span>Extension Auto Reply</span>
+<label class="switch">
 <input type="checkbox" id="extension">
+<span class="slider"></span>
+</label>
 </div>
 
 <button onclick="saveChanges()">
 Save Changes
+</button>
+
+<button class="refresh" onclick="loadStatus()">
+Refresh Status
 </button>
 
 <div class="status" id="status"></div>
@@ -83,17 +145,70 @@ Save Changes
 
 <script>
 
-const FLOW_URL =
-'https://default2a3a6f7440304a5e990fa70e200204.29.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/05cc917b66114b73bf72d37de990f083/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1a3lgG6VIxfWMrh-6-w7j06CiKZPwfeXeNtFYGDFb7E';
+const SECRET = "AvSec2026!";
 
-const SECRET='AvSec2026!';
+const STATUS_API =
+"https://default2a3a6f7440304a5e990fa70e200204.29.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/e80734148b9a4bbeb7940e86c1dcd2e6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=h-mR4RiCAlpAzbMog4XFl3roLt6vFdqsTpfP0IZ5wDw";
+
+const UPDATE_API =
+"PASTE_YOUR_UPDATE_API_URL_HERE";
+
+async function loadStatus(){
+
+document.getElementById("status").innerHTML =
+"Loading status...";
+
+try{
+
+const response = await fetch(STATUS_API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+secret:SECRET
+})
+});
+
+const data = await response.json();
+
+data.forEach(item=>{
+
+if(item.Title==="RecallAutoReply"){
+document.getElementById("recall").checked =
+item.Enabled;
+}
+
+if(item.Title==="ExtensionAutoReply"){
+document.getElementById("extension").checked =
+item.Enabled;
+}
+
+});
+
+document.getElementById("status").innerHTML =
+"✅ Status loaded";
+
+}
+catch(err){
+
+console.error(err);
+
+document.getElementById("status").innerHTML =
+"❌ Failed loading status";
+
+}
+
+}
 
 async function updateControl(name,state){
 
-return fetch(FLOW_URL,{
-method:'POST',
+return fetch(
+UPDATE_API,
+{
+method:"POST",
 headers:{
-'Content-Type':'application/json'
+"Content-Type":"application/json"
 },
 body:JSON.stringify({
 control:name,
@@ -105,34 +220,37 @@ secret:SECRET
 
 async function saveChanges(){
 
-document.getElementById('status').innerHTML='Saving...';
+document.getElementById("status").innerHTML =
+"Saving...";
 
 try{
 
 await updateControl(
-'RecallAutoReply',
-document.getElementById('recall').checked
+"RecallAutoReply",
+document.getElementById("recall").checked
 );
 
 await updateControl(
-'ExtensionAutoReply',
-document.getElementById('extension').checked
+"ExtensionAutoReply",
+document.getElementById("extension").checked
 );
 
-document.getElementById('status').innerHTML =
-'✅ Settings saved successfully';
+document.getElementById("status").innerHTML =
+"✅ Saved Successfully";
 
 }
 catch(err){
 
-document.getElementById('status').innerHTML =
-'❌ Save failed';
-
 console.error(err);
 
+document.getElementById("status").innerHTML =
+"❌ Save Failed";
+
 }
 
 }
+
+loadStatus();
 
 </script>
 
